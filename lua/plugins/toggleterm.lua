@@ -3,37 +3,33 @@ return {
 	version = "*",
 	config = function()
 		local Terminal = require("toggleterm")
-		local dir = vim.fn.getcwd()
-
 		local map = function(keys, func, desc)
 			vim.keymap.set("n", keys, func, { desc = desc })
 		end
 
-		local conda_env = function(direction)
-			local size
-			if direction == "vertical" then
-				size = 80
-			else
-				size = 15
-			end
-			local user_env = vim.fn.input("Enviroment: ")
-			Terminal.exec("conda activate " .. user_env, 1, size, dir, direction)
-		end
+		local claude_term = require("toggleterm.terminal").Terminal:new({
+			cmd = "claude",
+			direction = "float",
+			dir = vim.loop.cwd(),
+			id = 2,
+		})
+		local llama_term = require("toggleterm.terminal").Terminal:new({
+			cmd = "cd ~/git/OllamaCodeCompanion && python main.py",
+			direction = "float",
+			dir = vim.loop.cwd(),
+			id = 3,
+		})
 
 		map("<M-h>", function()
-			Terminal.toggle(1, 15, vim.fn.expand("%:p:h"), "horizontal")
-		end, "toggle and untoggle horizontal terminal")
+			Terminal.toggle(1, 15, vim.loop.cwd(), "horizontal")
+		end, "toggle horizontal terminal")
 
-		map("<M-v>", function()
-			Terminal.toggle(1, 80, vim.fn.expand("%:p:h"), "vertical")
-		end, "toggle and untoggle vertical terminal")
+		map("<M-c>", function()
+			claude_term:toggle()
+		end, "toggle floating terminal with claude")
 
-		map("<M-c>h", function()
-			conda_env("horizontal")
-		end, "toggle and untoggle vertical terminal")
-
-		map("<M-c>v", function()
-			conda_env("vertical")
-		end, "toggle and untoggle vertical terminal")
+		map("<M-l>", function()
+			llama_term:toggle()
+		end, "toggle floating terminal with llama")
 	end,
 }

@@ -39,6 +39,7 @@ require("lazy").setup({
 	require("plugins.nvim-tree"),
 	require("plugins.alpha-nvim"),
 	require("plugins.lsp-file-operations"),
+	"github/copilot.vim",
 	"tpope/vim-fugitive",
 	-- require("plugins.markdown_prev"),
 }, {
