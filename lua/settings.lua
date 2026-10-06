@@ -78,16 +78,60 @@ vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Show diagn
 vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Open diagnostic [Q]uickfix list" })
 vim.api.nvim_set_keymap("n", "<leader>i", "A # type: ignore<Esc>", { noremap = true, silent = true })
 
--- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
--- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
--- is not what someone will guess without a bit more experience.
---
-vim.keymap.set("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+-- Exit terminal mode. <C-q> works in every terminal; <Esc> only in plain shells,
+-- so CLI agents (claude, llama) still receive <Esc> to cancel a running task.
+vim.keymap.set("t", "<C-q>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+vim.api.nvim_create_autocmd("TermOpen", {
+	group = vim.api.nvim_create_augroup("terminal-esc", { clear = true }),
+	callback = function(event)
+		-- full command line of the job (may be wrapped in a shell, e.g. by snacks)
+		local job = vim.b[event.buf].terminal_job_id
+		local cmd = job and table.concat(vim.api.nvim_get_chan_info(job).argv or {}, " ") or ""
+		if cmd:match("claude") or cmd:match("OllamaCodeCompanion") then
+			return
+		end
+		vim.keymap.set("t", "<Esc>", "<C-\\><C-n>", { buffer = event.buf, desc = "Exit terminal mode" })
+	end,
+})
+
+-- Reload buffers changed on disk (e.g. edits made by Claude)
+vim.opt.autoread = true
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold" }, {
+	group = vim.api.nvim_create_augroup("auto-checktime", { clear = true }),
+	command = "silent! checktime",
+})
+
+-- Git: VS Code-like autofetch (git.autofetch) every 3 min, async, only inside a repo
+local git_fetch_timer = vim.uv.new_timer()
+git_fetch_timer:start(5000, 180000, function()
+	vim.schedule(function()
+		local cwd = vim.fn.getcwd()
+		if vim.fn.finddir(".git", cwd .. ";") == "" and vim.fn.findfile(".git", cwd .. ";") == "" then
+			return
+		end
+		vim.system({ "git", "fetch", "--quiet" }, { cwd = cwd, env = { GIT_TERMINAL_PROMPT = "0" } })
+	end)
+end)
+vim.api.nvim_create_autocmd("VimLeavePre", {
+	callback = function()
+		git_fetch_timer:stop()
+		git_fetch_timer:close()
+	end,
+})
+-- Git: "smart commit" (git.enableSmartCommit) = commit all tracked changes
+vim.keymap.set("n", "<leader>gC", "<Cmd>Git commit -a<CR>", { desc = "[G]it [C]ommit all (smart commit)" })
+
+-- Python host for remote plugins (molten-nvim)
+vim.g.python3_host_prog = vim.fn.expand("~/.virtualenvs/nvim/bin/python")
 
 vim.keymap.set("n", "<C-h>", "<C-w><C-h>", { desc = "Move focus to the left window" })
 vim.keymap.set("n", "<C-l>", "<C-w><C-l>", { desc = "Move focus to the right window" })
 vim.keymap.set("n", "<C-j>", "<C-w><C-j>", { desc = "Move focus to the lower window" })
 vim.keymap.set("n", "<C-k>", "<C-w><C-k>", { desc = "Move focus to the upper window" })
+-- Same for <C-h>/<C-j> in terminals (Claude has Backspace / Shift+Enter for these).
+-- <C-k>/<C-l> stay unmapped in t-mode: kill-line / clear-screen in the terminal.
+vim.keymap.set("t", "<C-h>", "<Cmd>wincmd h<CR>", { desc = "Move focus to the left window" })
+vim.keymap.set("t", "<C-j>", "<Cmd>wincmd j<CR>", { desc = "Move focus to the lower window" })
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 

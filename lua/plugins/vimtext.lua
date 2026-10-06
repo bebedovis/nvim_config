@@ -19,7 +19,5 @@ return {
     -- compiler options
     vim.g.vimtex_compiler_method = 'latexmk'
 
-    -- set local leader
-    vim.g.maplocalleader = '\\'
   end,
 }

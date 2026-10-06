@@ -201,7 +201,8 @@ return { -- LSP Configuration & Plugins
 			--    https://github.com/pmizio/typescript-tools.nvim
 			--
 			-- But for many setups, the LSP (`tsserver`) will work just fine
-			-- typescript_language_server = {},
+			ts_ls = {},
+			eslint = {}, -- like VS Code eslint.enable
 			--
 
 			lua_ls = {
@@ -233,6 +234,9 @@ return { -- LSP Configuration & Plugins
 		local ensure_installed = vim.tbl_keys(servers or {})
 		vim.list_extend(ensure_installed, {
 			"stylua", -- Used to format Lua code
+			"prettierd", -- Used to format JS/TS/JSON etc.
+			"black", -- Python formatter
+			"isort", -- Python import sorter
 		})
 		require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 

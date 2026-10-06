@@ -3,16 +3,11 @@ return {
 	version = "*",
 	config = function()
 		local Terminal = require("toggleterm")
+		-- Mapped in terminal mode too, so terminals can be toggled without leaving them
 		local map = function(keys, func, desc)
-			vim.keymap.set("n", keys, func, { desc = desc })
+			vim.keymap.set({ "n", "t" }, keys, func, { desc = desc })
 		end
 
-		local claude_term = require("toggleterm.terminal").Terminal:new({
-			cmd = "claude",
-			direction = "float",
-			dir = vim.loop.cwd(),
-			id = 2,
-		})
 		local llama_term = require("toggleterm.terminal").Terminal:new({
 			cmd = "cd ~/git/OllamaCodeCompanion && python main.py",
 			direction = "float",
@@ -23,10 +18,6 @@ return {
 		map("<M-h>", function()
 			Terminal.toggle(1, 15, vim.loop.cwd(), "horizontal")
 		end, "toggle horizontal terminal")
-
-		map("<M-c>", function()
-			claude_term:toggle()
-		end, "toggle floating terminal with claude")
 
 		map("<M-l>", function()
 			llama_term:toggle()

@@ -1,5 +1,6 @@
 return { -- Collection of various small independent plugins/modules
   'echasnovski/mini.nvim',
+  dependencies = { 'GCBallesteros/NotebookNavigator.nvim' }, -- for the ih/ah cell textobject
   config = function()
     -- Better Around/Inside textobjects
     --
@@ -7,7 +8,11 @@ return { -- Collection of various small independent plugins/modules
     --  - va)  - [V]isually select [A]round [)]paren
     --  - yinq - [Y]ank [I]nside [N]ext [']quote
     --  - ci'  - [C]hange [I]nside [']quote
-    require('mini.ai').setup { n_lines = 500 }
+    require('mini.ai').setup {
+      n_lines = 500,
+      -- ih/ah: inside/around a notebook cell (# %%)
+      custom_textobjects = { h = require('notebook-navigator').miniai_spec },
+    }
 
     -- Add/delete/replace surroundings (brackets, quotes, etc.)
     --
